@@ -1,3 +1,6 @@
+# Crear el archivo HTML corregido y actualizado con mejoras y sugerencias aplicadas
+
+html_code = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,6 +14,9 @@
       background-color: #0f172a;
       color: #f1f5f9;
     }
+    #weather-data {
+      min-height: 300px;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -22,16 +28,17 @@
   <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Panel de METAR y TAF -->
     <section>
-      <h2 class="text-xl font-semibold mb-4">Informes METAR y TAF</h2>
+      <h2 class="text-xl font-semibold mb-2">Informes METAR y TAF</h2>
+      <div id="last-update" class="text-sm text-blue-300 mb-2"></div>
       <div id="weather-data" class="space-y-4">
-        <!-- Aquí se insertarán los reportes vía JS -->
+        <p>Cargando datos...</p>
       </div>
     </section>
 
     <!-- Mapa Windy -->
     <section>
       <h2 class="text-xl font-semibold mb-4">Mapa Interactivo - Windy</h2>
-      <iframe width="100%" height="450" src="https://embed.windy.com/embed2.html?lat=-32.5228&lon=-55.7658&detailLat=-34.9011&detailLon=-56.1645&width=650&height=450&zoom=6&level=surface&overlay=wind&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
+      <iframe width="100%" height="450" src="https://embed.windy.com/embed2.html?lat=-32.5228&lon=-55.7658&detailLat=-34.9011&detailLon=-56.1645&width=650&height=450&zoom=6&level=surface&overlay=rainThunder&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
     </section>
   </main>
 
@@ -40,34 +47,46 @@
   </footer>
 
   <script>
-    const estaciones = ["SADF", "SAEZ", "SUAA", "SUMU", "SULS", "SUDU"];
+    const estaciones = ["SUMU", "SAEZ", "SADF", "SUAA", "SULS", "SUDU"];
     const tafs = ["SAEZ", "SUMU"];
     const API_BASE = "https://avwx.rest/api";
-    const API_KEY = ""; // Coloca tu clave si la tienes
+    const API_KEY = ""; // Reemplaza con tu clave de API si tienes una válida
 
     async function obtenerDato(tipo, est) {
       try {
         const response = await fetch(`${API_BASE}/${tipo}/${est}?options=info,translate`, {
           headers: { Authorization: `Bearer ${API_KEY}` }
         });
+
+        if (!response.ok) throw new Error("HTTP error " + response.status);
         return await response.json();
-      } catch {
+      } catch (err) {
+        console.error(`Error al cargar ${tipo} de ${est}:`, err);
         return null;
       }
     }
 
     async function cargarDatos() {
       const contenedor = document.getElementById('weather-data');
+      const infoHora = document.getElementById('last-update');
+      const ahora = new Date().toLocaleString('es-UY', { hour12: false });
+      infoHora.textContent = `Última actualización: ${ahora}`;
       contenedor.innerHTML = "<p>Cargando datos...</p>";
+
+      if (!API_KEY) {
+        contenedor.innerHTML = "<p class='text-red-300'>Error: clave de API no configurada.</p>";
+        return;
+      }
 
       const tarjetas = await Promise.all(estaciones.map(async est => {
         const metar = await obtenerDato("metar", est);
         const taf = tafs.includes(est) ? await obtenerDato("taf", est) : null;
+        const especial = est === "SUMU" ? "border-2 border-yellow-400" : "";
 
-        return `<div class='p-4 bg-blue-900 rounded-lg shadow'>
+        return `<div class='p-4 bg-blue-900 rounded-lg shadow ${especial}'>
                   <h3 class='text-lg font-bold mb-2'>${est}</h3>
                   ${metar ? `<p><strong>METAR:</strong> ${metar.raw}</p>
-                            <p><strong>Traducido:</strong> ${metar.sanitized || "-"}</p>`
+                             <p><strong>Traducido:</strong> ${metar.sanitized || "-"}</p>` 
                           : `<p class='text-red-300'>Error al cargar METAR.</p>`}
                   ${taf ? `<p class='mt-2'><strong>TAF:</strong> ${taf.raw}</p>` : ""}
                 </div>`;
@@ -81,3 +100,12 @@
   </script>
 </body>
 </html>
+"""
+
+# Guardar el archivo HTML en el sistema
+file_path = "/mnt/data/panel_meteorologico_aereo.html"
+with open(file_path, "w", encoding="utf-8") as f:
+    f.write(html_code)
+
+file_path
+
