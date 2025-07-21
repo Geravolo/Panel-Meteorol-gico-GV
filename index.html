@@ -75,6 +75,19 @@
       border-radius: 12px;
       border: none;
     }
+
+    /* Marca de agua */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.3);
+      user-select: none;
+      pointer-events: none;
+      font-style: italic;
+      font-family: 'Roboto', sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -89,6 +102,8 @@
       <iframe src="https://embed.windy.com/embed2.html?lat=-34.85&lon=-56.17&detailLat=-34.85&detailLon=-56.17&width=650&height=450&zoom=10&level=surface&overlay=wind&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1" loading="lazy"></iframe>
     </div>
   </div>
+
+  <div class="watermark">Gentileza Gerardo Volontè</div>
 
   <script>
     const stations = {
@@ -178,7 +193,6 @@
     function cargarTodos() {
       metarDiv.innerHTML = "";
 
-      // Asegurar que SUMU siempre va primero
       const orderedStations = ["SUMU", ...Object.keys(stations).filter(s => s !== "SUMU")];
 
       for (const station of orderedStations) {
@@ -196,9 +210,9 @@
     }
 
     cargarTodos();
-    setInterval(cargarTodos, 60 * 60 * 1000); // Actualiza cada hora
+    setInterval(cargarTodos, 60 * 60 * 1000);
     actualizarReloj();
-    setInterval(actualizarReloj, 1000); // Actualiza el reloj cada segundo
+    setInterval(actualizarReloj, 1000);
   </script>
 </body>
 </html>
