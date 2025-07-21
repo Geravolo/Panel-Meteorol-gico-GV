@@ -56,9 +56,6 @@
       border-radius: 12px;
       margin-top: 20px;
     }
-    pre {
-      white-space: pre-wrap;
-    }
   </style>
 </head>
 <body>
@@ -90,53 +87,79 @@
     };
 
     const metarDiv = document.getElementById("metar");
-    const API_BASE = "https://avwx.rest/api";
-    const API_KEY = "TU_API_KEY_AVWX";  // <--- reemplazar con tu clave real
 
-    async function obtenerDato(tipo, est) {
-      try {
-        const response = await fetch(`${API_BASE}/${tipo}/${est}?options=info,translate`, {
-          headers: { Authorization: `Bearer ${API_KEY}` }
-        });
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        return await response.json();
-      } catch (err) {
-        console.error(`Error al cargar ${tipo} de ${est}:`, err);
-        return null;
-      }
+    function metersToMiles(m) {
+      return (m / 1609.34).toFixed(1);
     }
 
-    async function mostrarMETAR(est, nombre) {
-      const metar = await obtenerDato("metar", est);
-      const taf = ["SUMU", "SAEZ"].includes(est) ? await obtenerDato("taf", est) : null;
+    function metersToFeet(m) {
+      return Math.round(m * 3.28084);
+    }
 
-      const div = document.createElement("div");
-      div.className = "metar-card" + (est === "SUMU" ? " highlight" : "");
+    function parseMETAR(metar) {
+      const wind = metar.match(/(\d{3}|VRB)(\d{2,3})G?(\d{2,3})?KT/);
+      const clouds = metar.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
+      const visibility = metar.match(/ (\d{4}) /);
+      let text = "";
 
-      if (metar) {
-        const traducido = metar.sanitized || "No disponible";
-        div.innerHTML = `<h3>${nombre} (${est})</h3>
-                         <pre><strong>METAR:</strong> ${metar.raw}</pre>
-                         <pre><strong>Interpretación:</strong> ${traducido}</pre>`;
-        if (taf) {
-          div.innerHTML += `<pre><strong>TAF:</strong> ${taf.raw}</pre>`;
-        }
-      } else {
-        div.innerHTML = `<h3>${nombre} (${est})</h3>
-                         <p style="color: #f87171;">No se pudo obtener el METAR.</p>`;
+      if (wind) {
+        const dir = wind[1] === "VRB" ? "Variable" : `${wind[1]}°`;
+        const speed = wind[2];
+        text += `Viento: ${dir} a ${speed} kt.\n`;
       }
 
-      if (est === "SUMU") {
-        metarDiv.prepend(div);
-      } else {
-        metarDiv.appendChild(div);
+      if (visibility) {
+        const vis = parseInt(visibility[1]);
+        text += `Visibilidad: ${metersToMiles(vis)} millas.\n`;
+      }
+
+      if (clouds) {
+        const cloudMap = {
+          FEW: "Pocas nubes",
+          SCT: "Nubes dispersas",
+          BKN: "Nublado",
+          OVC: "Cubierto"
+        };
+        text += "Cielo: ";
+        clouds.forEach(c => {
+          const type = c.slice(0, 3);
+          const heightFeet = parseInt(c.slice(3)) * 100;
+          text += `${cloudMap[type]} a ${heightFeet} pies, `;
+        });
+        text = text.replace(/, $/, "\n");
+      }
+
+      return text || "No se pudo interpretar el METAR.";
+    }
+
+    async function fetchMETAR(station, highlight = false) {
+      try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const metarUrl = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${station}.TXT`;
+        const res = await fetch(proxyUrl + encodeURIComponent(metarUrl));
+        const data = await res.text();
+        const lines = data.trim().split("\n");
+        const metar = lines[1];
+        const description = parseMETAR(metar);
+
+        const card = document.createElement("div");
+        card.className = "metar-card" + (highlight ? " highlight" : "");
+        card.innerHTML = `<h3>${stations[station]} (${station})</h3><pre>${description}</pre><small>${metar}</small>`;
+
+        if (highlight) {
+          metarDiv.prepend(card);
+        } else {
+          metarDiv.appendChild(card);
+        }
+      } catch (error) {
+        console.error("Error obteniendo METAR para", station);
       }
     }
 
     function cargarTodos() {
       metarDiv.innerHTML = "";
-      for (const est in stations) {
-        mostrarMETAR(est, stations[est]);
+      for (const station in stations) {
+        fetchMETAR(station, station === "SUMU");
       }
     }
 
@@ -150,10 +173,9 @@
     }
 
     cargarTodos();
-    setInterval(cargarTodos, 60 * 60 * 1000); // Cada hora
+    setInterval(cargarTodos, 60 * 60 * 1000); // Actualizar cada hora
     actualizarReloj();
-    setInterval(actualizarReloj, 1000); // Cada segundo
+    setInterval(actualizarReloj, 1000); // Actualizar reloj cada segundo
   </script>
 </body>
 </html>
-
