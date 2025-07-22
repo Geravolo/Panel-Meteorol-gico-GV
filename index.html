@@ -37,7 +37,7 @@
 
     .layout {
       display: flex;
-      height: calc(100vh - 160px); /* Ajustar al alto de títulos/reloj */
+      height: calc(100vh - 160px);
       padding: 10px;
       gap: 10px;
       box-sizing: border-box;
@@ -210,9 +210,13 @@
     }
 
     cargarTodos();
-    setInterval(cargarTodos, 60 * 60 * 1000);
+    setInterval(cargarTodos, 60 * 60 * 1000); // Actualiza datos cada hora
     actualizarReloj();
-    setInterval(actualizarReloj, 1000);
+    setInterval(actualizarReloj, 1000); // Actualiza reloj cada segundo
+
+    // Refresca toda la página cada hora
+    setInterval(() => location.reload(), 60 * 60 * 1000);
   </script>
 </body>
 </html>
+
