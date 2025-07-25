@@ -92,7 +92,7 @@
 </head>
 <body>
   <h1>DNAPN</h1>
-  <h2>Operaciones Aéreas</h2>
+  <h2>METAR</h2>
   <div class="clock" id="clock">Cargando hora local...</div>
   <div class="zulu-time" id="zulu">Cargando hora Zulu...</div>
 
@@ -103,7 +103,7 @@
     </div>
   </div>
 
-  <div class="watermark">Gentileza Gerardo Volontè</div>
+  <div class="watermark">GDV</div>
 
   <script>
     const stations = {
@@ -149,10 +149,10 @@
 
       if (clouds) {
         const cloudMap = {
-          FEW: "Pocas nubes",
-          SCT: "Nubes dispersas",
-          BKN: "Nublado",
-          OVC: "Cubierto"
+          FEW: "",
+          SCT: "",
+          BKN: "",
+          OVC: ""
         };
         text += "Cielo: ";
         clouds.forEach(c => {
@@ -163,7 +163,7 @@
         text = text.replace(/, $/, "\n");
       }
 
-      return text || "No se pudo interpretar el METAR.";
+      return text || "A la espera de Datos";
     }
 
     async function fetchMETAR(station, highlight = false) {
@@ -215,7 +215,7 @@
     setInterval(actualizarReloj, 1000); // Actualiza reloj cada segundo
 
     // Refresca toda la página cada hora
-    setInterval(() => location.reload(), 60 * 60 * 1000);
+    setInterval(() => location.reload(), 03 * 03 * 1000);
   </script>
 </body>
 </html>
