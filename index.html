@@ -137,15 +137,15 @@
       const visibility = metar.match(/ (\d{4}) /);
       let text = "";
 
-      if (wind) {
-        const dir = wind[1] === "VRB" ? "Variable" : `${wind[1]}°`;
-        const speed = wind[2];
-        text += `Viento: ${dir} a ${speed} kt.\n`;
+   //   if (wind) {
+    //    const dir = wind[1] === "VRB" ? "Variable" : `${wind[1]}°`;
+    //    const speed = wind[2];
+     //   text += `Viento: ${dir} a ${speed} kt.\n`;
       }
 
-      if (visibility) {
-        const vis = parseInt(visibility[1]);
-        text += `Visibilidad: ${metersToMiles(vis)} millas.\n`;
+     // if (visibility) {
+     //   const vis = parseInt(visibility[1]);
+      //  text += `Visibilidad: ${metersToMiles(vis)} millas.\n`;
       }
 
       if (clouds) {
@@ -155,11 +155,11 @@
           BKN: "",
           OVC: ""
         };
-        text += "Cielo: ";
-        clouds.forEach(c => {
-          const type = c.slice(0, 3);
-          const heightFeet = parseInt(c.slice(3)) * 100;
-          text += `${cloudMap[type]} a ${heightFeet} pies, `;
+      //  text += "Cielo: ";
+      //  clouds.forEach(c => {
+       //   const type = c.slice(0, 3);
+       //   const heightFeet = parseInt(c.slice(3)) * 100;
+        //  text += `${cloudMap[type]} a ${heightFeet} pies, `;
         });
         text = text.replace(/, $/, "\n");
       }
