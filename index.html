@@ -3,245 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DNAPN - METAR </title>
-
-  <!-- Fuente Roboto desde Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
+  <title>METAR Uruguay</title>
   <style>
-    /* Estilos base del documento */
-    html, body {
+    body {
+      background-color: #121212;
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-      font-family: 'Roboto', sans-serif;
-      background: #ccc;
-      color: white;
+      padding: 20px;
     }
-
-    /* Encabezados */
-    h1, h2 {
+    h1 {
       text-align: center;
-      margin: 5px 0;
-      color: #222;
+      color: #00bfff;
     }
-
-    /* Reloj en hora local */
-    .clock {
-      text-align: center;
-      font-size: 1rem;
-      color: #333;
+    .metar-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
     }
-
-    /* Hora Zulu (UTC) */
-    .zulu-time {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 10px;
-    }
-
-    /* Contenedor principal con dos columnas */
-    .layout {
-      display: flex;
-      height: calc(100vh - 160px);
-      padding: 10px;
-      gap: 10px;
-      box-sizing: border-box;
-    }
-
-    /* Columna con los METAR */
-    .metar-column {
-      flex: 1 1 40%;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-right: 5px;
-    }
-
-    /* Tarjeta de cada estación */
     .metar-card {
-      background: #131326;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      color: white;
-      font-size: 1.4rem;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
-
-    /* Resaltado para la estación principal */
-    .highlight {
-      border: 2px solid #ffcc00;
+    .metar-card.highlight {
+      border: 2px solid #00bfff;
     }
-
-    /* Columna con el mapa Windy */
-    .windy-column {
-      flex: 1 1 40%;
-      height: 100%;
-    }
-
-    /* Iframe del visor Windy */
-    iframe {
-      width: 100%;
-      height: 100%;
-      border-radius: 12px;
-      border: none;
-    }
-
-    /* Marca de agua */
-    .watermark {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      font-size: 0.9rem;
-      color: rgba(0, 0, 0, 0.3);
-      user-select: none;
-      pointer-events: none;
-      font-style: italic;
-      font-family: 'Roboto', sans-serif;
-    }
-
-    /* Botón para mostrar el METAR original */
-    .toggle-metar {
-      background-color: #444;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 5px;
-      font-size: 0.9rem;
-    }
-
-    /* Estilo del METAR original (texto pequeño y gris) */
     .metar-raw {
       font-size: 1rem;
       color: #bbb;
-      margin-top: 5px;
       white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <!-- Encabezados -->
-  <h1>DNAPN</h1>
-  <h2>Departamento de Operaciones Aereas</h2>
+  <h1>METAR Uruguay</h1>
 
-  <!-- Hora local -->
-  <div class="clock" id="clock">Cargando hora local...</div>
-  <!-- Hora Zulu -->
-  <div class="zulu-time" id="zulu">Cargando hora Zulu...</div>
-
-  <!-- Contenedor principal -->
-  <div class="layout">
-    <!-- Columna con los METAR -->
-    <div id="metar" class="metar-column"></div>
-
-    <!-- Columna con mapa Windy -->
-    <div class="windy-column">
-      <iframe src="https://embed.windy.com/embed2.html?lat=-34.85&lon=-56.17&detailLat=-34.85&detailLon=-56.17&width=650&height=450&zoom=10&level=surface&overlay=wind&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1" loading="lazy"></iframe>
-    </div>
-  </div>
-
-  <!-- Marca de agua -->
-  <div class="watermark">Autoria VOLO/COLO</div>
+  <!-- Contenedor donde se insertarán las tarjetas -->
+  <div id="metar" class="metar-container"></div>
 
   <script>
-    // Lista de estaciones METAR y sus nombres legibles
+    // Lista de estaciones con sus nombres
     const stations = {
       "SUMU": "Carrasco",
       "SUAA": "Melilla",
       "SULS": "Laguna del Sauce",
-      "SUAG": "Artigas",
-      "SUCA": "Colonia",
-      "SUDU": "Durazno",
-      "SUCM": "Carmelo",
-      "SUPU": "Paysandú",
+      "SUSO": "Salto",
       "SUTB": "Tacuarembó",
-      "SUTR": "Treinta y Tres",
-      "SUPE": "Jagüel"
+      "SULM": "La Mina",
+      "SUKO": "Colonia",
+      "SURU": "Rivera",
+      "SUME": "Mercedes"
     };
 
-    // Contenedor donde se mostrarán las tarjetas METAR
+    // Referencia al contenedor de tarjetas
     const metarDiv = document.getElementById("metar");
 
-    // Convierte metros a millas
-    function metersToMiles(m) {
-      return (m / 1609.34).toFixed(1);
-    }
-
-    // Convierte metros a pies
-    function metersToFeet(m) {
-      return Math.round(m * 3.28084);
-    }
-
-    // Procesa el METAR para mostrarlo en formato legible
-    function parseMETAR(metar) {
-      const wind = metar.match(/(\d{3}|VRB)(\d{2,3})G?(\d{2,3})?KT/);
-      const clouds = metar.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
-      const visibility = metar.match(/ (\d{4}) /);
-      let text = "";
-
-      // Viento
-      if (wind) {
-        const dir = wind[1] === "VRB" ? "Variable" : `${wind[1]}°`;
-        const speed = wind[2];
-        text += `Viento: ${dir} a ${speed} kt.\n`;
-      }
-
-      // Visibilidad
-      if (visibility) {
-        const vis = parseInt(visibility[1]);
-        text += `Visibilidad: ${metersToMiles(vis)} millas.\n`;
-      }
-
-      // Nubosidad
-      if (clouds) {
-        const cloudMap = { FEW: "", SCT: "", BKN: "", OVC: "" };
-        text += "Cielo: ";
-        clouds.forEach(c => {
-          const type = c.slice(0, 3);
-          const heightFeet = parseInt(c.slice(3)) * 100;
-          text += `${cloudMap[type]} a ${heightFeet} pies, `;
-        });
-        text = text.replace(/, $/, "\n");
-      }
-
-      return text || "A la espera de Datos";
-    }
-
-    // Obtiene el METAR y crea la tarjeta
+    /**
+     * Función para obtener el METAR de una estación
+     * @param {string} station - código ICAO de la estación
+     * @param {boolean} highlight - si es la estación principal a resaltar
+     */
     async function fetchMETAR(station, highlight = false) {
       try {
+        // Usamos proxy para evitar problemas de CORS
         const proxyUrl = 'https://api.allorigins.win/raw?url=';
         const metarUrl = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${station}.TXT`;
+
+        // Descarga del METAR crudo
         const res = await fetch(proxyUrl + encodeURIComponent(metarUrl));
         const data = await res.text();
-        const lines = data.trim().split("\n");
-        const metar = lines[1]; // METAR crudo
-        const description = parseMETAR(metar);
 
-        // Crear tarjeta con botón para mostrar/ocultar METAR crudo
+        // El archivo tiene dos líneas: fecha/hora y METAR
+        const lines = data.trim().split("\n");
+        const metar = lines[1]; // línea 2 = METAR original
+
+        // Crear tarjeta que muestra solo el METAR crudo
         const card = document.createElement("div");
         card.className = "metar-card" + (highlight ? " highlight" : "");
         card.innerHTML = `
           <h3>${stations[station]} (${station})</h3>
-          <pre>${description}</pre>
-          <button class="toggle-metar">Ver original</button>
-          <pre class="metar-raw" style="display:none;">${metar}</pre>
+          <pre class="metar-raw">${metar}</pre>
         `;
 
-        // Evento para mostrar/ocultar el METAR original
-        card.querySelector(".toggle-metar").addEventListener("click", function () {
-          const raw = card.querySelector(".metar-raw");
-          const isHidden = raw.style.display === "none";
-          raw.style.display = isHidden ? "block" : "none";
-          this.textContent = isHidden ? "Ocultar original" : "Ver original";
-        });
-
-        // Agrega la tarjeta en su posición
+        // Agregar tarjeta al inicio si es destacada, si no al final
         if (highlight) {
           metarDiv.prepend(card);
         } else {
@@ -252,33 +99,22 @@
       }
     }
 
-    // Carga todos los METAR, con SUMU primero
-    function cargarTodos() {
-      metarDiv.innerHTML = "";
-      const orderedStations = ["SUMU", ...Object.keys(stations).filter(s => s !== "SUMU")];
-      for (const station of orderedStations) {
+    /**
+     * Función para cargar todos los METAR
+     */
+    function loadAllMETARs() {
+      metarDiv.innerHTML = ""; // limpiar antes de recargar
+      for (const station in stations) {
+        // Resaltar Carrasco (SUMU) como principal
         fetchMETAR(station, station === "SUMU");
       }
     }
 
-    // Actualiza hora local y Zulu
-    function actualizarReloj() {
-      const ahora = new Date();
-      const fecha = ahora.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      const horaLocal = ahora.toLocaleTimeString('es-UY', { hour12: false });
-      const zulu = ahora.toISOString().substring(11, 16) + 'Z';
-      document.getElementById("clock").textContent = `${fecha} - ${horaLocal}`;
-      document.getElementById("zulu").textContent = `Hora Zulu (UTC): ${zulu}`;
-    }
+    // Cargar al inicio
+    loadAllMETARs();
 
-    // Inicialización
-    cargarTodos();
-    setInterval(cargarTodos, 60 * 60 * 1000); // Actualiza datos cada hora
-    actualizarReloj();
-    setInterval(actualizarReloj, 1000); // Actualiza reloj cada segundo
-
-    // Refresca la página cada 16 minutos aprox. (revisar si quieres que sea 1h)
-    setInterval(() => location.reload(), 10 * 10 * 1000);
+    // Recargar cada hora
+    setInterval(loadAllMETARs, 60 * 60 * 1000);
   </script>
 </body>
 </html>
